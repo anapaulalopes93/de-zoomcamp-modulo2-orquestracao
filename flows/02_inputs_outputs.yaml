@@ -1,0 +1,24 @@
+id: 02_inputs_outputs
+namespace: zoomcamp.modulo2
+description: "Inputs + outputFiles: baixa um CSV e conta linhas"
+
+inputs:
+  - id: url
+    type: STRING
+    defaults: "https://github.com/DataTalksClub/nyc-tlc-data/releases/download/green/green_tripdata_2020-12.csv.gz"
+  - id: arquivo
+    type: STRING
+    defaults: "green_tripdata_2020-12.csv"
+
+tasks:
+  - id: baixar_e_contar
+    type: io.kestra.plugin.scripts.shell.Commands
+    taskRunner:
+      type: io.kestra.plugin.core.runner.Process
+    outputFiles:
+      - "{{ inputs.arquivo }}"
+      - "linhas.txt"
+    commands:
+      - "wget -qO- {{ inputs.url }} | gunzip > {{ inputs.arquivo }}"
+      - "wc -l {{ inputs.arquivo }} | awk '{print $1}' > linhas.txt"
+      - "echo 'Linhas no arquivo:' && cat linhas.txt"
