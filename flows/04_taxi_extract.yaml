@@ -1,0 +1,57 @@
+id: 04_taxi_extract
+namespace: zoomcamp.modulo2
+description: |
+  Baixa taxi data (yellow/green) por mês via inputs e gera CSV.
+  Versão robusta: usa render() para garantir substituição das variáveis.
+
+inputs:
+  - id: taxi
+    type: SELECT
+    displayName: "Tipo de taxi"
+    values: ["yellow", "green"]
+    defaults: "green"
+
+  - id: year
+    type: INT
+    displayName: "Ano"
+    defaults: 2020
+
+  - id: month
+    type: STRING
+    displayName: "Mês (MM)"
+    defaults: "12"
+
+variables:
+  file: "{{ inputs.taxi }}_tripdata_{{ inputs.year }}-{{ inputs.month }}.csv"
+  gz_file: "{{ vars.file }}.gz"
+  url: "https://github.com/DataTalksClub/nyc-tlc-data/releases/download/{{ inputs.taxi }}/{{ vars.file }}.gz"
+
+tasks:
+  - id: set_labels
+    type: io.kestra.plugin.core.execution.Labels
+    labels:
+      taxi: "{{ inputs.taxi }}"
+      year: "{{ inputs.year }}"
+      month: "{{ inputs.month }}"
+      dataset: "nyc-tlc"
+
+  - id: log_info
+    type: io.kestra.plugin.core.log.Log
+    message: "Baixando {{ render(vars.gz_file) }} de {{ render(vars.url) }}"
+
+  - id: extract
+    type: io.kestra.plugin.scripts.shell.Commands
+    taskRunner:
+      type: io.kestra.plugin.core.runner.Process
+    outputFiles:
+      - "linhas.txt"
+      - "debug.txt"
+    commands:
+      - "set -x"
+      - "echo 'URL={{ render(vars.url) }}' | tee debug.txt"
+      - "wget -S -O {{ render(vars.gz_file) }} {{ render(vars.url) }} 2>> debug.txt"
+      - "ls -lah {{ render(vars.gz_file) }} | tee -a debug.txt"
+      - "gzip -t {{ render(vars.gz_file) }}"
+      - "gunzip -c {{ render(vars.gz_file) }} > {{ render(vars.file) }}"
+      - "wc -l {{ render(vars.file) }} | awk '{print $1}' | tee linhas.txt"
+      - "echo 'OK' | tee -a debug.txt"
