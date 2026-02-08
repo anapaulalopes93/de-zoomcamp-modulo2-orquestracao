@@ -1,0 +1,34 @@
+id: 05_backfill_2021
+namespace: zoomcamp.modulo2
+description: "Backfill Jan-Jul 2021 (green + yellow) via ForEach + Subflow (compatível)"
+
+variables:
+  combos:
+    - "green|01"
+    - "green|02"
+    - "green|03"
+    - "green|04"
+    - "green|05"
+    - "green|06"
+    - "green|07"
+    - "yellow|01"
+    - "yellow|02"
+    - "yellow|03"
+    - "yellow|04"
+    - "yellow|05"
+    - "yellow|06"
+    - "yellow|07"
+
+tasks:
+  - id: backfill
+    type: io.kestra.plugin.core.flow.ForEach
+    values: "{{ vars.combos }}"
+    tasks:
+      - id: run_extract
+        type: io.kestra.plugin.core.flow.Subflow
+        namespace: zoomcamp.modulo2
+        flowId: 04_taxi_extract
+        inputs:
+          taxi: "{{ taskrun.value | split('\\|') | first }}"
+          year: 2021
+          month: "{{ taskrun.value | split('\\|') | last }}"
