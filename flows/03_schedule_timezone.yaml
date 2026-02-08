@@ -1,0 +1,14 @@
+id: 03_schedule_timezone
+namespace: zoomcamp.modulo2
+description: "Exemplo de Schedule trigger com timezone"
+
+tasks:
+  - id: log
+    type: io.kestra.plugin.core.log.Log
+    message: "Executado via schedule em {{ execution.startDate }}"
+
+triggers:
+  - id: todo_dia_9am_ny
+    type: io.kestra.plugin.core.trigger.Schedule
+    cron: "0 9 * * *"
+    timezone: "America/New_York"
